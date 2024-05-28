@@ -1,0 +1,97 @@
+version: '3'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-broker-api-versions --bootstrap-server kafka:9092"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auction:
+    image: golang:1.22-alpine
+    container_name: auction
+    volumes:
+      - ./auction:/app
+    command: >
+      sh -c "cd /app && go build -o auction-service && ./auction-service"
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKER=kafka:9092
+
+  bidding:
+    image: golang:1.22-alpine
+    container_name: bidding
+    volumes:
+      - ./bidding:/app
+    command: >
+      sh -c "cd /app && go build -o bidding-service && ./bidding-service"
+    ports:
+      - "8081:8081"
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKER=kafka:9092
+
+  bidding-2:
+    image: golang:1.22-alpine
+    container_name: bidding-2
+    volumes:
+      - ./bidding:/app
+    command: >
+      sh -c "cd /app && go build -o bidding-service && ./bidding-service"
+    ports:
+      - "8082:8081"
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKER=kafka:9092
+
+  bidding-3:
+    image: golang:1.22-alpine
+    container_name: bidding-3
+    volumes:
+      - ./bidding:/app
+    command: >
+      sh -c "cd /app && go build -o bidding-service && ./bidding-service"
+    ports:
+      - "8083:8081"
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKER=kafka:9092

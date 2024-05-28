@@ -34,7 +34,7 @@ To install and set up the project, follow these steps:
 
 2. Navigate to the project directory: `cd bidding-and-auction`
 
-3. `make run` => this will run the docker compose up, and build the images and run 1 auction service and 3 bidding services
+3. `make run` => this will run the docker compose up, and build the images and run 1 auction service and 3 bidding services together with Zookeeper -> Kafka (all of them in correct order)
 
   
 ## Usage

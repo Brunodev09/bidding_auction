@@ -41,12 +41,19 @@ services:
       sh -c "cd /app && go build -o auction-service && ./auction-service"
     ports:
       - "8080:8080"
+      - "5432:5432"
     restart: always
     depends_on:
       kafka:
         condition: service_healthy
     environment:
       - KAFKA_BROKER=kafka:9092
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=yourpassword
+      - DB_DATABASE=auction
+      - DB_SSL=disable
 
   bidding:
     image: golang:1.22-alpine

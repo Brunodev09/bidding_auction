@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"auction/models"
 	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type BiddingServiceResponse struct {
@@ -13,7 +16,15 @@ type BiddingServiceResponse struct {
 	BidPrice int    `json:"bid_price"`
 }
 
-func AuctionHandler(w http.ResponseWriter, r *http.Request) {
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+type Repository struct {
+	DB *gorm.DB
+}
+
+func (repo *Repository) AuctionHandler(w http.ResponseWriter, r *http.Request) error {
 	adPlacementID := r.URL.Query().Get("ad_placement_id")
 	log.Println("Request received for AdPlacementId:", adPlacementID)
 
@@ -53,11 +64,27 @@ func AuctionHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !receivedAnyBid {
 		w.WriteHeader(http.StatusNoContent)
-		return
+		return nil
+	}
+
+	bidderModel := &models.Bidder{
+		ClientId: &bestBid.AdID,
+		BidPrice: &bestBid.BidPrice,
+	}
+
+	err := repo.DB.Create(&bidderModel).Error
+	if err != nil {
+		log.Fatal(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Failed to persist on database."})
+		return err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bestBid)
+
+	return nil
 }
 
 func callBiddingService(url string) (BiddingServiceResponse, error) {

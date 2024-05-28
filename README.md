@@ -23,6 +23,7 @@
 A simple project written in GO that has an Auction Service and Bidding service. The Auction service gets the bids from all the bidding services, and return back with the best bid.
 
 I went a little further on the task and implemented Kafka to intermediate the concurrent requests coming from bidders.
+I also added the repository pattern and persisted each highest bid and its id in Postgres.
 
 ## Architecture
 ![Diagram](images/architecture.png)
@@ -30,11 +31,24 @@ I went a little further on the task and implemented Kafka to intermediate the co
 ## Installation
 
 To install and set up the project, follow these steps:
+
 1. Clone the repository: `git clone https://github.com/brunodev09/bidding-and-auction.git`
 
-2. Navigate to the project directory: `cd bidding-and-auction`
+2. Have Postgres installed on your environment and create a database with the name "auction"
 
-3. `make run` => this will run the docker compose up, and build the images and run 1 auction service and 3 bidding services together with Zookeeper -> Kafka (all of them in correct order)
+3. Edit the `docker-compose.yaml` file, specifically with your database credentials under the `auction` service
+```
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=yourpassword
+      - DB_DATABASE=auction
+      - DB_SSL=disable
+```
+
+4. Navigate to the project directory: `cd bidding-and-auction`
+
+5. `make run` => this will run the docker compose up, and build the images and run 1 auction service and 3 bidding services together with Zookeeper -> Kafka (all of them in correct order)
 
   
 ## Usage
